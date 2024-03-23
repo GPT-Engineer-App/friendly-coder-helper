@@ -1,0 +1,109 @@
+import React, { useState } from "react";
+import { ChakraProvider, Box, VStack, Input, Button, Checkbox, Heading, Text, Container, useToast } from "@chakra-ui/react";
+import { FaPlus } from "react-icons/fa";
+
+const Index = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [todos, setTodos] = useState([]);
+  const [newTodoName, setNewTodoName] = useState("");
+  const toast = useToast();
+
+  // Mock login function
+  const handleLogin = () => {
+    // In a real app, you would send a request to the backend for authentication
+    setIsLoggedIn(true);
+  };
+
+  // Function to fetch todos
+  const fetchTodos = async () => {
+    const response = await fetch("https://backengine-whin.fly.dev/todos", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer your_token_here`,
+      },
+    });
+
+    if (response.ok) {
+      const todosData = await response.json();
+      setTodos(todosData);
+    } else {
+      toast({
+        title: "Error fetching todos",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Function to add a new todo
+  const addTodo = async () => {
+    const response = await fetch("https://backengine-whin.fly.dev/todos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer your_token_here`,
+      },
+      body: JSON.stringify({ name: newTodoName, completed: false }),
+    });
+
+    if (response.ok) {
+      fetchTodos(); // Refresh the todo list
+      setNewTodoName(""); // Clear the input
+    } else {
+      toast({
+        title: "Error adding todo",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Function to toggle todo completion
+  const toggleTodoCompletion = (todoId) => {
+    // Implementation would go here, similar to addTodo.
+    // This would involve sending a PUT or PATCH request to the backend
+    // to update the todo's 'completed' status.
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <ChakraProvider>
+        <Container centerContent>
+          <VStack spacing={4}>
+            <Heading>Login</Heading>
+            <Button colorScheme="blue" onClick={handleLogin}>
+              Log In
+            </Button>
+          </VStack>
+        </Container>
+      </ChakraProvider>
+    );
+  }
+
+  return (
+    <ChakraProvider>
+      <Container centerContent>
+        <VStack spacing={4}>
+          <Heading>Todo List</Heading>
+          <VStack spacing={2} align="stretch">
+            {todos.map((todo) => (
+              <Checkbox key={todo.id} isChecked={todo.completed} onChange={() => toggleTodoCompletion(todo.id)}>
+                {todo.name}
+              </Checkbox>
+            ))}
+          </VStack>
+          <HStack>
+            <Input placeholder="Add new todo" value={newTodoName} onChange={(e) => setNewTodoName(e.target.value)} />
+            <Button colorScheme="blue" onClick={addTodo}>
+              <FaPlus />
+            </Button>
+          </HStack>
+        </VStack>
+      </Container>
+    </ChakraProvider>
+  );
+};
+
+export default Index;
